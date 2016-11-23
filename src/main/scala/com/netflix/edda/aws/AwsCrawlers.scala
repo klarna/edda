@@ -378,7 +378,7 @@ class AwsLoadBalancerCrawler(val name: String, val ctx: AwsCrawler.Context) exte
         }
       } catch {
         case e: Exception => {
-          logger.error("error retrieving tags for an elb")
+          throw new java.lang.RuntimeException(this + " tag retrieval failed for one or more ELBs", e)
         }
       }
     }
