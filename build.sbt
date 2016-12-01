@@ -38,5 +38,10 @@ lazy val edda = project.in(file("."))
     "org.slf4j"                      % "slf4j-log4j12"            % slf4j,
 
     "org.scalatest"                 %% "scalatest"                % "2.2.6" % "test"
-  ))
+    ),
+
+    // disable using the Scala version in output paths and artifacts
+    // http://stackoverflow.com/questions/8288859/how-do-you-remove-the-scala-version-postfix-from-artifacts-builtpublished-wi
+    crossPaths := false
+  )
 
