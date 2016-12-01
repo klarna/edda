@@ -341,48 +341,60 @@ class AwsImageCrawler(val name: String, val ctx: AwsCrawler.Context) extends Cra
   * @param ctx context to provide beanMapper
   */
 class AwsLoadBalancerCrawler(val name: String, val ctx: AwsCrawler.Context) extends Crawler {
+
+  import Utils._
+
   private[this] val logger = LoggerFactory.getLogger(getClass)
   val request = new DescribeLoadBalancersRequest
 
+  lazy val getTags  = Utils.getProperty("edda.crawler", "collectTags", name, "true")
+
   override def doCrawl()(implicit req: RequestId) = {
-    val initial = backoffRequest { ctx.awsClient.elb.describeLoadBalancers(request).getLoadBalancerDescriptions }.asScala.map(
-        item => Record(item.getLoadBalancerName, new DateTime(item.getCreatedTime), ctx.beanMapper(item))).toSeq.grouped(20).toList
+    val allLoadBalancers = backoffRequest { ctx.awsClient.elb.describeLoadBalancers(request).getLoadBalancerDescriptions }.asScala.map(
+        item => Record(item.getLoadBalancerName, new DateTime(item.getCreatedTime), ctx.beanMapper(item))).toSeq
 
-    backoffRequest { ctx.awsClient.loadAccountNum() }
+    if (getTags.get.toBoolean) {
+        var buffer = new ListBuffer[Record]()
+        val initial = allLoadBalancers.grouped(20).toList
 
-    var buffer = new ListBuffer[Record]()
+        backoffRequest { ctx.awsClient.loadAccountNum() }
 
-    for (group <- initial) {
-      var names = new ListBuffer[String]()
+        for (group <- initial) {
+            var names = new ListBuffer[String]()
 
-      for (rec <- group) {
-        val data = rec.toMap("data").asInstanceOf[Map[String,String]]
-        names += data("loadBalancerName")
-      }
-      try {
-        val request = new com.amazonaws.services.elasticloadbalancing.model.DescribeTagsRequest().withLoadBalancerNames(names)
-        val response = backoffRequest { ctx.awsClient.elb.describeTags(request) }
-        val responseList = backoffRequest { response.getTagDescriptions().asScala.map(
-          item => {
-            ctx.beanMapper(item)
-          }).toSeq
-        }
-
-        for (rec <- group) {
-          val data = rec.toMap("data").asInstanceOf[Map[String,String]]
-          for (response <- responseList) {
-            if (response.asInstanceOf[Map[String,Any]]("loadBalancerName") == data("loadBalancerName")) {
-              buffer += rec.copy(data = data.asInstanceOf[Map[String,Any]] ++ Map("tags" -> response.asInstanceOf[Map[String,Any]]("tags")))
+            for (rec <- group) {
+                val data = rec.toMap("data").asInstanceOf[Map[String,String]]
+                names += data("loadBalancerName")
             }
-          }
+
+            try {
+                val request = new com.amazonaws.services.elasticloadbalancing.model.DescribeTagsRequest().withLoadBalancerNames(names)
+                val response = backoffRequest { ctx.awsClient.elb.describeTags(request) }
+                val responseList = backoffRequest { response.getTagDescriptions().asScala.map(
+                    item => {
+                        ctx.beanMapper(item)
+                    }).toSeq
+                }
+
+                for (rec <- group) {
+                    val data = rec.toMap("data").asInstanceOf[Map[String,String]]
+                    for (response <- responseList) {
+                        if (response.asInstanceOf[Map[String,Any]]("loadBalancerName") == data("loadBalancerName")) {
+                            buffer += rec.copy(data = data.asInstanceOf[Map[String,Any]] ++ Map("tags" -> response.asInstanceOf[Map[String,Any]]("tags")))
+                        }
+                    }
+                }
+            } catch {
+                case e: Exception => {
+                    throw new java.lang.RuntimeException(this + " tag retrieval failed for one or more ELBs", e)
+                }
+            }
         }
-      } catch {
-        case e: Exception => {
-          throw new java.lang.RuntimeException(this + " tag retrieval failed for one or more ELBs", e)
-        }
-      }
+
+        buffer.toList
+    } else {
+        allLoadBalancers
     }
-    buffer.toList
   }
 }
 
