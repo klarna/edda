@@ -74,7 +74,7 @@ object Collection extends StateMachine.LocalState[CollectionState] {
   case class Delta(recordSet: RecordSet, changed: Seq[RecordUpdate], added: Seq[Record], removed: Seq[Record]) {
     override def toString = "Delta(records=" + recordSet.records.size + ", changed=" + changed.size + ", added=" + added.size + ", removed=" + removed.size + ")"
   }
-  
+
   /** Message to Purge the record set from the Datastore */
   case class Purge(from: Actor)(implicit req: RequestId) extends StateMachine.Message
 
@@ -129,7 +129,7 @@ abstract class Collection(val ctx: Collection.Context) extends Queryable {
     * features will be limited (only current state is available, so no history queries possible)
     */
   lazy val dataStore: Option[Datastore] = Utils.makeHistoryDatastore(name)
-  
+
   lazy val currentDataStore: Option[Datastore] = {
     val ds = Utils.makeCurrentDatastore(name);
     if( ds.isDefined ) ds else dataStore
@@ -185,7 +185,7 @@ abstract class Collection(val ctx: Collection.Context) extends Queryable {
       Observable.OK(Actor.self)
     }
   }
-  
+
   // basic servo metrics
   private[this] val loadTimer = Monitors.newTimer("load")
   private[this] val loadCounter = Monitors.newCounter("load.count")
@@ -204,7 +204,7 @@ abstract class Collection(val ctx: Collection.Context) extends Queryable {
     new Callable[java.lang.Long] {
       def call() = if(elector.isLeader()(RequestId("crawl.updatedRecordCount.gauge"))) updatedRecordCount.get else 0
     })
-  
+
   private[this] val addedRecordCount = new AtomicLong(0);
   private[this] val addedRecordGauge = new BasicGauge[java.lang.Long](
     MonitorConfig.builder("crawl.addedRecordCount").build(),
@@ -276,7 +276,7 @@ abstract class Collection(val ctx: Collection.Context) extends Queryable {
       val t1 = System.nanoTime()
       val lapse = (t1 - t0) / 1000000;
       if (logger.isInfoEnabled) logger.info(s"$req$this memory scan lapse: ${lapse}ms")
-    }    
+    }
   }
 
   /** load collection from Datastore (if available) */
@@ -315,7 +315,7 @@ abstract class Collection(val ctx: Collection.Context) extends Queryable {
       lastCurrentUpdate = DateTime.now
       delta
     } else d
-    val d2 = if(dataStore.isDefined && ((currentDataStore.isDefined && currentDataStore.get != dataStore.get) || currentDataStore.isEmpty)) { 
+    val d2 = if(dataStore.isDefined && ((currentDataStore.isDefined && currentDataStore.get != dataStore.get) || currentDataStore.isEmpty)) {
       // merge the meta data for the datastore updates
       try {
         val newDelta = dataStore.get.update(d)
@@ -346,14 +346,14 @@ abstract class Collection(val ctx: Collection.Context) extends Queryable {
   protected[edda] def delta(newRecordSet: RecordSet, oldRecordSet: RecordSet)(implicit req: RequestId): Delta = {
     val now = DateTime.now
     val newRecords = newRecordSet.records.map( rec => rec.copy(mtime = now) )
-    
+
     // remove needs to be a list to allow for duplicate records (multiple record revisions
     // on the same id)
     var remove = Seq[Record]()
-    
+
     // sometimes there are duplicates in oldRecords (upon first-load when we load all records
     // with null ltime) when we have a rogue writer (sometimes there are gaps between leadership
-    // changes). 
+    // changes).
     val oldSeen = scala.collection.mutable.Map[String,Record]()
     val oldMap = oldRecordSet.records.filter(r => {
       val in = oldSeen.contains(r.id)
@@ -366,12 +366,12 @@ abstract class Collection(val ctx: Collection.Context) extends Queryable {
       !in
     }).map(rec => rec.id -> rec).toMap
     val newMap = newRecords.map(rec => rec.id -> rec).toMap
-      
+
     remove ++= oldMap.filterNot(pair => newMap.contains(pair._1)).map(
       pair => pair._2.copy(mtime = now, ltime = now))
-    
+
     val addedMap = newMap.filterNot(pair => oldMap.contains(pair._1))
-    
+
     val changes = newMap.filter(pair => {
       oldMap.contains(pair._1) && !pair._2.sameData(oldMap(pair._1))
     }).map(
@@ -385,7 +385,7 @@ abstract class Collection(val ctx: Collection.Context) extends Queryable {
         }
       }
     )
-    
+
     // need to reset stime, ctime, tags for crawled records to match what we have in memory
     val fixedRecords = newRecords.collect {
       case rec: Record if changes.contains(rec.id) => {
@@ -396,7 +396,7 @@ abstract class Collection(val ctx: Collection.Context) extends Queryable {
         oldMap(rec.id).copy(data = rec.data, mtime = rec.mtime)
       case rec: Record => rec
     }
-    
+
     if (logger.isInfoEnabled) logger.info(s"$req$this total: ${fixedRecords.size} changed: ${changes.size} added: ${addedMap.size} removed: ${remove.size} meta: ${oldRecordSet.meta ++ newRecordSet.meta}")
     Delta(RecordSet(fixedRecords, oldRecordSet.meta ++ newRecordSet.meta), changed = changes.values.toSeq, added = addedMap.values.toSeq, removed = remove)
   }
@@ -419,7 +419,7 @@ abstract class Collection(val ctx: Collection.Context) extends Queryable {
         if (currentDataStore.isDefined) currentDataStore.get.init()
         if (dataStore.isDefined && ((currentDataStore.isDefined && currentDataStore.get != dataStore.get) || currentDataStore.isEmpty))
           dataStore.get.init()
-        
+
         // routine to run on success of crawler addObserver call
         // or to run immediately if crawler is disabled
         def postObserver = {
@@ -568,7 +568,7 @@ abstract class Collection(val ctx: Collection.Context) extends Queryable {
           } finally {
             fos.close()
           }
-          
+
           try {
             val symPath = dir.resolve(name)
             if( Files.isSymbolicLink(symPath) ) {

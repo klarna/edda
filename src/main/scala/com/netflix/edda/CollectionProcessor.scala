@@ -57,7 +57,7 @@ class CollectionProcessor(collection: Collection) extends Observable {
   override def toString = s"[Collection Processor ${collection.name}]"
 
   override def threadPoolSize = 1
-  
+
   lazy val logDiffs = Utils.getProperty("edda.collection", "logDiffs", collection.name, "true")
 
   private[this] val updateTimer = Monitors.newTimer("update")
@@ -154,14 +154,14 @@ class CollectionProcessor(collection: Collection) extends Observable {
               }
             }
           })
-        
+
         val msg = DeltaResult(this, d, localState(state).recordSet.meta)
         Observable.localState(state).observers.foreach(o => {
           if (logger.isDebugEnabled) logger.debug(s"$req$this sending: $msg -> $o")
           o ! msg
         })
       }
-      
+
       if (from == this || !collection.elector.isLeader()) {
         // this is from a Load so no need to calculate Delta
         // just make sure there are not dups loaded

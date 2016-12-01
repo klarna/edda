@@ -32,7 +32,7 @@ class CollectionRefresher(collection: Collection) extends Actor {
 
   // how often to purge history, default is every 6 hours
   lazy val purgeFrequency = Utils.getProperty("edda.collection", "purgeFrequency", collection.name, "21600000")
-  
+
   /** helper routine to calculate timeLeft before a Crawl request shoudl be made */
   def timeLeft(lastRun: DateTime, millis: Long): Long = {
     val timeLeft = millis - (DateTime.now.getMillis - lastRun.getMillis)
@@ -107,11 +107,11 @@ class CollectionRefresher(collection: Collection) extends Actor {
   override def exceptionHandler = {
     case e: Exception => if (logger.isErrorEnabled) logger.error(s"$collection failed to refresh", e)
   }
-  
+
   override def start() = {
     if (Option(collection.crawler).isDefined && Option(collection.elector).isDefined) {
       super.start()
-      
+
       implicit val req = RequestId(s"$this start")
       import ObserverExecutionContext._
       collection.elector.addObserver(this) onComplete {

@@ -108,7 +108,7 @@ class StateMachine extends Actor {
     if (logger.isDebugEnabled) logger.debug(Actor.self + " sending: " + msg + " -> " + this)
     this ! msg
   }
-  
+
   def threadPoolSize = 4
   val pool = Executors.newFixedThreadPool(threadPoolSize)
   override val scheduler = ExecutorScheduler(pool, false)
@@ -192,7 +192,7 @@ class StateMachine extends Actor {
               implicit val req = gotMsg.req
               if (!transitions.isDefinedAt(gotMsg, state)) {
                 if (logger.isErrorEnabled) logger.error(s"$req Unknown Message $gotMsg sent from $sender")
-                val msg = UnknownMessageError(this, "Unknown Message " + gotMsg, gotMsg) 
+                val msg = UnknownMessageError(this, "Unknown Message " + gotMsg, gotMsg)
                 if (logger.isDebugEnabled) logger.debug(s"$req$this sending: $msg -> $sender")
                 sender ! msg
               }
@@ -207,7 +207,7 @@ class StateMachine extends Actor {
             }
             case message => {
               if (logger.isErrorEnabled) logger.error("Invalid Message " + message + " sent from " + sender)
-              val msg = InvalidMessageError(this, "Invalid Message " + message, message)(RequestId()) 
+              val msg = InvalidMessageError(this, "Invalid Message " + message, message)(RequestId())
               if (logger.isDebugEnabled) logger.debug(this + " sending: " + msg + " -> " + sender)
               sender ! msg
             }

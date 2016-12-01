@@ -362,7 +362,7 @@ class CollectionResource {
       } else details.id
       makeQuery(details) + ("id" -> idQuery)
     } else makeQuery(details)
-    if (logger.isInfoEnabled) logger.info(reqId.toString + coll + " query: " + Utils.toJson(query))
+    // if (logger.isInfoEnabled) logger.info(reqId.toString + coll + " query: " + Utils.toJson(query))
     val keys: Set[String] = if (details.expand) details.fields else Set("id")
     // unique(coll.query(query, details.limit, details.timeTravelling, keys, replicaOk = true), details)
     try {
@@ -386,12 +386,12 @@ class CollectionResource {
   @GET
   @Path("{paths: .+}")
   def getCollection(@Context req: HttpServletRequest): Response = {
-    
+
     val t0 = System.nanoTime()
     // +4 for length("/v2/")
     val realPath = req.getRequestURI.drop(req.getContextPath.length + req.getServletPath.length + 4)
     reqId = RequestId()
-    logger.info(reqId.toString + "GET " + realPath)
+    // logger.info(reqId.toString + "GET " + realPath)
     try {
       val fieldSelectorsRx(path,exprStr) = realPath
       path match {
@@ -416,8 +416,8 @@ class CollectionResource {
     } finally {
       val t1 = System.nanoTime()
       val lapse = (t1 - t0) / 1000000;
-      if (logger.isInfoEnabled) logger.info(reqId.toString + "EXIT " + realPath  + " lapse " + lapse + "ms")
+      // if (logger.isInfoEnabled) logger.info(reqId.toString + "EXIT " + realPath  + " lapse " + lapse + "ms")
     }
   }
-    
+
 }

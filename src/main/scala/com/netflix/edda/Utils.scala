@@ -69,7 +69,7 @@ object Utils {
   //   *     case Success(results: QueryResult) => queryResults = results.records
   //   *   }
   //   * }
-  //   * }}}  
+  //   * }}}
   //   * @param action closure to run and wait for completion
   //   */
   // object SYNC {
@@ -91,7 +91,7 @@ object Utils {
   //       case Exit(`actor`, err: scala.actors.UncaughtException) => {
   //         throw err.cause
   //       }
-  //       case Exit(`actor`, reason) => 
+  //       case Exit(`actor`, reason) =>
   //     }
   //     Actor.self.trapExit = trapExit
   //   }
@@ -153,7 +153,7 @@ object Utils {
      * @param pf PartialFunction to handle exception types
      */
     def addExceptionHandler(pf: PartialFunction[Exception,Unit]): ActorExceptionHandler = {
-      handlers = pf orElse handlers 
+      handlers = pf orElse handlers
       this
     }
   }
@@ -419,7 +419,7 @@ object Utils {
       composite.addConfiguration(eddaConfig, "eddaConfig")
     }
   }
-    
+
   def uuid = java.util.UUID.randomUUID.toString
 
   def compress( in: String ): Array[Byte] = {
@@ -439,7 +439,7 @@ object Utils {
     Utils.getProperty("edda", "datastore.class", name, "com.netflix.edda.mongo.MongoDatastore").get match {
       case datastoreClassName: String if datastoreClassName != "" => {
         val datastoreClass = this.getClass.getClassLoader.loadClass(datastoreClassName)
-        val datastoreCtor = datastoreClass.getConstructor(classOf[String]) 
+        val datastoreCtor = datastoreClass.getConstructor(classOf[String])
         Some(datastoreCtor.newInstance(name).asInstanceOf[Datastore])
       }
       case _ => None
@@ -450,7 +450,7 @@ object Utils {
     Utils.getProperty("edda", "datastore.current.class", name, "").get match {
       case datastoreClassName: String if datastoreClassName != "" => {
         val datastoreClass = this.getClass.getClassLoader.loadClass(datastoreClassName)
-        val datastoreCtor = datastoreClass.getConstructor(classOf[String]) 
+        val datastoreCtor = datastoreClass.getConstructor(classOf[String])
         Some(datastoreCtor.newInstance(name).asInstanceOf[Datastore])
       }
       case _ => None
