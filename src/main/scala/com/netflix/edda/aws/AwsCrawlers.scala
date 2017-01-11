@@ -373,7 +373,7 @@ class AwsLoadBalancerCrawler(val name: String, val ctx: AwsCrawler.Context) exte
             }
 
             try {
-                val request = new com.amazonaws.services.elasticloadbalancing.model.DescribeTagsRequest().withLoadBalancerNames(names)
+                val request = new com.amazonaws.services.elasticloadbalancing.model.DescribeTagsRequest().withLoadBalancerNames(names.asJava)
                 val response = backoffRequest { ctx.awsClient.elb.describeTags(request) }
                 val responseList = backoffRequest { response.getTagDescriptions().asScala.map(
                     item => {
