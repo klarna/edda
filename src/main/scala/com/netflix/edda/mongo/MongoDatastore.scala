@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2016 Netflix, Inc.
+ * Copyright 2012-2017 Netflix, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -161,11 +161,15 @@ object MongoDatastore {
         )
 
         val queryTimeout = Utils.getProperty("edda.collection", "queryTimeout", name, "60000").get.toInt
-        val user = mongoProperty("user", name, null)
-        val credential = List(MongoCredential.createMongoCRCredential(
+        val user = mongoProperty("user", name, "")
+
+        var credential = List[MongoCredential]()
+        if (!user.isEmpty) {
+          credential = List(MongoCredential.createMongoCRCredential(
             user,
             mongoProperty("database", name, "edda"),
             mongoProperty("password", name, "").toArray))
+        }
 
         val options = new MongoClientOptions.Builder()
         options.connectTimeout(500)
