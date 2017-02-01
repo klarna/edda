@@ -18,7 +18,7 @@ object Bintray {
   lazy val settings: Seq[Def.Setting[_]] = bintraySettings ++ Seq(
     bintrayRepository := "maven",
     bintrayPackage := "edda",
-    bintrayOrganization := Some("netflixoss"),
+    bintrayOrganization := Some("klarna"),
     bintrayReleaseOnPublish := false,
     licenses += ("Apache-2.0", url("https://www.apache.org/licenses/LICENSE-2.0.txt")),
     credentials += Credentials("Artifactory Realm", "oss.jfrog.org", user, pass),
